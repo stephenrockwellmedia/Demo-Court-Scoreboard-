@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Court 1 – Display</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: black;
+      font-family: sans-serif;
+      color: white;
+    }
+
+    /* ═══ SCOREBOARD VIEW ═══ */
+    #scoreboardView {
+      display: none;
+      width: 100vw; height: 100vh;
+      background: black;
+      align-items: center; justify-content: center;
+    }
+    #scoreboardView.active { display: flex; }
+
+    .sb-container { position: relative; width: 832px; height: 384px; display: flex; border: 1px solid #444; }
+    .player-area { width: 245px; display: flex; flex-direction: column; }
+    .player-box { height: 192px; border: 1px solid white; background: #1a365d; display: flex; align-items: center; justify-content: center; }
+    .player-name { font-size: 24px; font-weight: bold; text-align: center; color: white; padding: 8px; word-break: break-word; }
+    .score-area { width: 110px; border: 1px solid white; background: #808080; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .score-num { font-size: 85px; font-weight: bold; color: white; text-align: center; line-height: 1; }
+    .info-panel {
+      flex-grow: 1;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 16px 12px;
+      border-left: 1px solid #444;
+      text-align: center;
+    }
+    .info-block { width: 100%; padding: 14px 0; border-bottom: 1px solid #222; }
+    .info-block:last-child { border-bottom: none; }
+    .info-label {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #5b9bd5;
+      margin-bottom: 6px;
+    }
+    .info-value {
+      font-weight: 900;
+      color: white;
+      font-size: 15px;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      word-break: break-word;
+    }
+    #disp-event { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+    #disp-games { font-size: 24px; }
+    #disp-clock { font-size: 26px; font-weight: 900; color: white; letter-spacing: 0.04em; }
+
+    @keyframes scoreFlash { 0%{ transform:scale(1); } 30%{ transform:scale(1.15); color:#ffe066; } 100%{ transform:scale(1); } }
+    .flash { animation: scoreFlash 0.4s ease; }
+
+    /* ═══ SCOREBUG VIEW ═══ */
+    #scorebugView {
+      display: none;
+      width: 100vw; height: 100vh;
+      background: black;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-end;
+    }
+    #scorebugView.active { display: flex; }
+
+    /* ── Ad Banner ── */
+    #adBanner {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .ad-slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .ad-slide.active { opacity: 1; }
+
+    /* Ad designs */
+    .ad-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ad 1 – Local pizza shop */
+    .ad-1 { background: linear-gradient(135deg, #c0392b, #8b0000); }
+    .ad-1 .ad-logo { font-size: 72px; font-weight: 900; color: #fff; letter-spacing: -2px; text-shadow: 4px 4px 0 rgba(0,0,0,0.4); }
+    .ad-1 .ad-tag { font-size: 28px; color: #ffcc00; font-weight: 700; margin-top: 8px; }
+    .ad-1 .ad-sub { font-size: 20px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+    .ad-1 .ad-accent { position:absolute; right:-40px; top:-40px; width:260px; height:260px; background:rgba(255,204,0,0.12); border-radius:50%; }
+
+    /* Ad 2 – Sports drink */
+    .ad-2 { background: linear-gradient(160deg, #0a0a0a, #001a33); }
+    .ad-2 .ad-wordmark { font-size: 90px; font-weight: 900; letter-spacing: 8px; color: #00aaff; text-transform: uppercase; text-shadow: 0 0 40px rgba(0,170,255,0.5); }
+    .ad-2 .ad-tag { font-size: 26px; color: #fff; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; margin-top: 6px; }
+    .ad-2 .ad-bolt { position:absolute; left:60px; top:50%; transform:translateY(-50%); font-size:180px; color:rgba(0,170,255,0.08); line-height:1; }
+
+    /* Ad 3 – Chiro / sports medicine */
+    .ad-3 { background: linear-gradient(135deg, #1a3a2a, #0d2018); }
+    .ad-3 .ad-logo { font-size: 52px; font-weight: 900; color: #4cde8a; letter-spacing: 1px; }
+    .ad-3 .ad-tag { font-size: 24px; color: #fff; margin-top: 10px; font-weight: 400; }
+    .ad-3 .ad-cta { font-size: 22px; color: #4cde8a; font-weight: 700; margin-top: 14px; border: 2px solid #4cde8a; padding: 8px 28px; border-radius: 40px; display: inline-block; }
+    .ad-3 .ad-cross { position:absolute; right:80px; top:50%; transform:translateY(-50%); font-size:140px; color:rgba(76,222,138,0.1); }
+
+    /* Ad 4 – Equipment shop */
+    .ad-4 { background: linear-gradient(135deg, #1a1a3e, #2d1b69); }
+    .ad-4 .ad-logo { font-size: 56px; font-weight: 900; color: #fff; }
+    .ad-4 .ad-logo span { color: #a78bfa; }
+    .ad-4 .ad-tag { font-size: 26px; color: #d8b4fe; margin-top: 8px; font-weight: 400; }
+    .ad-4 .ad-badge { background: #a78bfa; color: #1a1a3e; font-weight: 900; font-size: 20px; padding: 6px 22px; border-radius: 40px; margin-top: 16px; display: inline-block; }
+    .ad-4 .ad-paddle { position:absolute; right:60px; top:50%; transform:translateY(-50%) rotate(-20deg); font-size:140px; color:rgba(167,139,250,0.12); }
+
+    /* progress dots */
+    #adDots {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      transition: background 0.4s;
+    }
+    .dot.active { background: rgba(255,255,255,0.85); }
+
+    /* ── Scorebug bar ── */
+    .bar { height: 72px; display:grid; grid-template-columns:1.2fr 2.2fr 1.1fr 2.1fr 1.2fr; gap:4px; padding:8px 12px; box-sizing:border-box; background:linear-gradient(90deg,#14203a,#22335d 70%); flex-shrink: 0; }
+    .sec { position:relative; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden; border-radius:6px; }
+    .sec:not(#cn)::before { content:""; position:absolute; left:3px; right:3px; top:3px; bottom:3px; background:#000; opacity:.78; border-radius:6px; }
+    .label { font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.08em; z-index:1; margin-bottom:1px; color:#d4e5fd; }
+    #cur .label { color:#6cff6c; }
+    #nxt .label { color:#ffe56b; }
+    .val { font-weight:800; z-index:1; text-align:center; line-height:1.08; color:#fff; padding:0 6px; }
+    #cur .val, #nxt .val { font-size:14px; }
+    #cd .val  { font-size:20px; }
+    #now .val { font-size:16px; }
+    #cn .val { position:relative; font-size:58px; font-weight:900; padding:2px 12px; letter-spacing:.02em; border:3px solid #fff; border-radius:10px; text-shadow:0 1px 2px rgba(0,0,0,.4); }
+    .pulse-blue { animation: pulseBlue 2.8s ease-in-out infinite; }
+    @keyframes pulseBlue { 0%,100%{ border-color:#ffffff; } 50%{ border-color:#7fbfff; } }
+
+    /* ── Ad Placement watermark ── */
+    .ad-placement-tag {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-18deg);
+      font-size: 68px; font-weight: 900; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.06);
+      white-space: nowrap; pointer-events: none; z-index: 50;
+    }
+    .ad-placement-badge {
+      position: absolute; top: 14px; right: 18px;
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.45); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 11px;
+      border-radius: 4px; z-index: 51; pointer-events: none;
+    }
+    .api-disc-label { color: #ff5555 !important; }
+    .api-disc-val   { color: #ff5555 !important; font-size: 11px !important; }
+    </style>
+</head>
+<body>
+
+  <!-- ══════════════ SCOREBOARD ══════════════ -->
+  <div id="scoreboardView">
+    <div class="sb-container">
+      <div class="player-area">
+        <div class="player-box"><div class="player-name" id="disp-p4">S. JOHNSON</div></div>
+        <div class="player-box"><div class="player-name" id="disp-p3">M. CHEN</div></div>
+      </div>
+      <div class="score-area"><div class="score-num" id="disp-score1">7</div></div>
+      <div class="score-area"><div class="score-num" id="disp-score2">5</div></div>
+      <div class="player-area">
+        <div class="player-box"><div class="player-name" id="disp-p1">T. RIVERA</div></div>
+        <div class="player-box"><div class="player-name" id="disp-p2">K. PATEL</div></div>
+      </div>
+      <div class="info-panel">
+        <div class="info-block">
+          <div class="info-label">Event</div>
+          <div class="info-value" id="disp-event">SPRING TOURNAMENT</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Games</div>
+          <div class="info-value" id="disp-games">11-8, 7-5</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Time</div>
+          <div id="disp-clock">--:--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SCOREBUG ══════════════ -->
+  <div id="scorebugView">
+
+    <!-- Ad rotation area -->
+    <div id="adBanner">
+
+      <!-- Ad 1: Sal's Pizza -->
+      <div class="ad-slide active" id="ad-0">
+        <div class="ad-placement-tag">Ad Placement</div>
+        <div class="ad-placement-badge">Ad Placement</div>
+        <div class="ad-inner ad-1">
+          <div class="ad-accent"></div>
+          <div style="text-align:center; position:relative; z-index:1;">
+            <div class="ad-logo">SAL'S PIZZA</div>
+            <div class="ad-tag">Best Slice in Canonsburg</div>
+            <div class="ad-sub">Order online · sals-pizza.com</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ad 2: HydroMax Sports Drink -->
+      <div class="ad-slide" id="ad-1">
+        <div class="ad-placement-tag">Ad Placement</div>
+        <div class="ad-placement-badge">Ad Placement</div>
+        <div class="ad-inner ad-2">
+          <div class="ad-bolt">⚡</div>
+          <div style="text-align:center; position:relative; z-index:1;">
+            <div class="ad-wordmark">HYDROMAX</div>
+            <div class="ad-tag">Fuel Your Game</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ad 3: Peak Performance Chiro -->
+      <div class="ad-slide" id="ad-2">
+        <div class="ad-placement-tag">Ad Placement</div>
+        <div class="ad-placement-badge">Ad Placement</div>
+        <div class="ad-inner ad-3">
+          <div class="ad-cross">✚</div>
+          <div style="text-align:center; position:relative; z-index:1;">
+            <div class="ad-logo">PEAK PERFORMANCE</div>
+            <div class="ad-tag">Sports Chiropractic & Recovery</div>
+            <div class="ad-cta">Book a Free Consult</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ad 4: ProPaddle Shop -->
+      <div class="ad-slide" id="ad-3">
+        <div class="ad-placement-tag">Ad Placement</div>
+        <div class="ad-placement-badge">Ad Placement</div>
+        <div class="ad-inner ad-4">
+          <div class="ad-paddle">🏓</div>
+          <div style="text-align:center; position:relative; z-index:1;">
+            <div class="ad-logo">PRO<span>PADDLE</span></div>
+            <div class="ad-tag">Premium Pickleball Gear</div>
+            <div class="ad-badge">10% OFF with code LEVELUP</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dots -->
+      <div id="adDots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- Scorebug bar -->
+    <div class="bar" id="bar" style="position:relative;">
+      <div style="position:absolute;top:6px;right:14px;background:rgba(180,0,0,0.75);color:#ffaaaa;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:2px 8px;border-radius:3px;z-index:20;pointer-events:none;">⚠ API Disconnected</div>
+      <div id="cn"  class="sec"><div class="val pulse-blue" id="cno">1</div></div>
+      <div id="cur" class="sec"><div class="label">In Progress</div><div class="val" id="curv">3.5–3.99 Open Play</div></div>
+      <div id="cd"  class="sec"><div class="label">Time Left</div><div class="val" id="cdv">42m</div></div>
+      <div id="nxt" class="sec"><div class="label">Upcoming</div><div class="val" id="nxtv">4.0+ Advanced Drill</div></div>
+      <div id="now" class="sec"><div class="label">Current Time</div><div class="val" id="clock">--:--</div></div>
+    </div>
+
+  </div>
+
+<!-- Firebase — view switcher only -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+<script>
+  firebase.initializeApp({
+    databaseURL: "https://portfolio-55917-default-rtdb.firebaseio.com",
+    projectId: "portfolio-55917",
+  });
+
+  var db = firebase.database();
+
+  // ── View switcher (still live from controller) ──
+  db.ref('view').on('value', function(snap) {
+    var v = snap.val() || 'scorebug';
+    document.getElementById('scoreboardView').classList.toggle('active', v === 'scoreboard');
+    document.getElementById('scorebugView').classList.toggle('active',   v === 'scorebug');
+  });
+
+  // ── Scoreboard: also sync live scores/names from controller ──
+  var fieldMap = { p1:'disp-p1', p2:'disp-p2', p3:'disp-p3', p4:'disp-p4', score1:'disp-score1', score2:'disp-score2', event:'disp-event', games:'disp-games' };
+  db.ref('scoreboard').on('value', function(snap) {
+    var data = snap.val(); if (!data) return;
+    Object.keys(fieldMap).forEach(function(key) {
+      var el = document.getElementById(fieldMap[key]); if (!el) return;
+      if (data[key] !== undefined) el.textContent = String(data[key]);
+    });
+  });
+
+  // ── Live clock ──
+  function tick() {
+    var now = new Date();
+    var h = now.getHours(), m = String(now.getMinutes()).padStart(2,'0'), s = String(now.getSeconds()).padStart(2,'0');
+    var ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+    var el = document.getElementById('clock'); if (el) el.textContent = h + ':' + m + ':' + s + ' ' + ap;
+    var el2 = document.getElementById('disp-clock'); if (el2) el2.textContent = h + ':' + m + ':' + s + ' ' + ap;
+    setTimeout(tick, 1000);
+  }
+  tick();
+
+  // ── Ad rotator ──
+  var adCount = 4;
+  var currentAd = 0;
+  var slides = document.querySelectorAll('.ad-slide');
+  var dots   = document.querySelectorAll('.dot');
+
+  function showAd(idx) {
+    slides.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
+    dots.forEach(function(d, i)   { d.classList.toggle('active', i === idx); });
+  }
+
+  setInterval(function() {
+    currentAd = (currentAd + 1) % adCount;
+    showAd(currentAd);
+  }, 6000);
+</script>
+</body>
+</html>
