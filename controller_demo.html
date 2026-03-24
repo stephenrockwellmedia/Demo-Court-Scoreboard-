@@ -265,8 +265,16 @@
   // View switcher sync
   viewRef.on('value', function(snap) {
     var v = snap.val() || 'scorebug';
-    document.getElementById('btn-scoreboard').classList.toggle('active', v === 'scoreboard');
-    document.getElementById('btn-scorebug').classList.toggle('active',   v === 'scorebug');
+    var sbActive  = v === 'scoreboard';
+    var bugActive = v === 'scorebug';
+    document.getElementById('btn-scoreboard').classList.toggle('active', sbActive);
+    document.getElementById('btn-scorebug').classList.toggle('active',   bugActive);
+    document.getElementById('btn-scoreboard').innerHTML = sbActive
+      ? '📊 Scoreboard'
+      : '📊 Scoreboard<br><span style="font-size:9px;font-weight:400;color:#5b9bd5;letter-spacing:0.08em;">▶ TAP TO SWITCH</span>';
+    document.getElementById('btn-scorebug').innerHTML = bugActive
+      ? '🏓 Scorebug'
+      : '🏓 Scorebug<br><span style="font-size:9px;font-weight:400;color:#5b9bd5;letter-spacing:0.08em;">▶ TAP TO SWITCH</span>';
   });
 
   var BANNED = ['fuck','shit','ass','bitch','cunt','dick','cock','pussy','bastard','asshole','motherfucker','fucker','bullshit','damn','crap','piss','fag','faggot','nigger','nigga','retard','whore','slut','twat','wanker','prick','arse','bollocks','tosser','shithead','jackass','douchebag','dipshit','jerk','moron','idiot'];
